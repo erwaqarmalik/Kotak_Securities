@@ -1,0 +1,12 @@
+import pandas as pd
+from datetime import date
+
+date = date.today()
+today = date.strftime("%d_%m_%Y")
+df = pd.read_csv("https://preferred.kotaksecurities.com/security/production/TradeApiInstruments_CASH_"+today+".txt", delimiter="|")
+# df.to_csv('instrument token.csv')
+ins = pd.DataFrame(df)
+ins.set_index('instrumentName', inplace=True)
+name = input('Enter Instrument Name')
+#ins.loc[(name.upper()),('instrumentToken','exchange')]
+ins._get_value((name.upper()),('instrumentToken'))
