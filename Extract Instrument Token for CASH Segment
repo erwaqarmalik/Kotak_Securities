@@ -1,12 +1,42 @@
+import os
 import pandas as pd
-from datetime import date
+import datetime as dt
 
-date = date.today()
+date = dt.date.today()
 today = date.strftime("%d_%m_%Y")
-df = pd.read_csv("https://preferred.kotaksecurities.com/security/production/TradeApiInstruments_CASH_"+today+".txt", delimiter="|")
-# df.to_csv('instrument token.csv')
-ins = pd.DataFrame(df)
-ins.set_index('instrumentName', inplace=True)
-name = input('Enter Instrument Name')
-#ins.loc[(name.upper()),('instrumentToken','exchange')]
-ins._get_value((name.upper()),('instrumentToken'))
+url_fno = 'https://preferred.kotaksecurities.com/security/production/TradeApiInstruments_FNO_'+today+'.txt'
+url_cash = 'https://preferred.kotaksecurities.com/security/production/TradeApiInstruments_CASH_'+today+'.txt'
+filename_fno = 'fno.csv'
+filename_cash = 'cash.csv'
+if os.path.exists(filename_cash) == True: #to skip file not found error
+    ctime_cash = dt.datetime.fromtimestamp(os.path.getmtime('cash.csv')).strftime('%d_%m_%Y')
+if os.path.exists(filename_fno) == True: #to skip file not found error
+    ctime_fno = dt.datetime.fromtimestamp(os.path.getmtime('fno.csv')).strftime('%d_%m_%Y')
+
+if os.path.exists(filename_cash) == True and ctime_cash == today:
+        df_eq = pd.read_csv(filename_cash)
+else:
+    df_eq = pd.read_csv(url_cash,delimiter="|")
+    df_eq.to_csv(filename_cash)
+    df_eq = pd.read_csv(filename_cash)
+if os.path.exists(filename_fno) == True and ctime_fno == today:
+    df_fno = pd.read_csv(filename_fno)
+else:
+    df_fno = pd.read_csv(url_fno,delimiter="|")
+    df_fno.to_csv(filename_fno)
+    df_fno = pd.read_csv(filename_fno)
+
+def fnotoken(script,optype , strike ,expiry):
+    optype_strike = df_fno.loc[(df_fno['optionType']== optype.upper()) & (df_fno['strike']== int(strike)) & (df_fno['expiry'] == expiry.upper()) & (df_fno['instrumentName'] == script.upper())]
+    instoken = optype_strike._get_value(0,1, takeable = True)
+    return int(instoken)
+def lotsize(script,optype , strike ,expiry):
+    lotsize_filter = df_fno.loc[(df_fno['optionType'] == optype.upper()) & (df_fno['strike'] == int(strike)) & (df_fno['expiry'] == expiry.upper()) & (df_fno['instrumentName'] == script.upper())]
+    size = lotsize_filter._get_value(0,8, takeable = True)
+    return int(size)
+
+def eqtoken(script):
+    cash_filter = df_eq.loc[(df_eq['instrumentName'] == script.upper())]
+    ins_token = cash_filter._get_value(0,1, takeable = True)
+    return (ins_token)
+if __name__ == '__main__':
